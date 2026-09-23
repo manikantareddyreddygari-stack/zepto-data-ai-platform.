@@ -157,23 +157,11 @@ docker run -p 7860:7860 zepto-support-assistant
 
 ---
 
-## Git Workflow Verification
+## Git Workflow
 
-To satisfy the grading criterion for repository history, I worked on a feature branch (`feature/data-pipeline`), committed my work in atomic steps, and then merged it back into `main` using a non-fast-forward merge:
+Development was organized using a feature-branch workflow. The data engineering module was built on `feature/data-pipeline` across multiple atomic commits, and then merged back into `main` via a non-fast-forward merge commit.
 
-```text
-* ee4cbe8 feat(support_assistant): complete LangGraph RAG assistant, FastAPI app, Dockerfile, and root README
-* e8f0769 feat(analytics): complete EDA, predictive modeling, regression side-task, and pipeline persistence
-*   2ea6436 merge: integrate data pipeline module from feature/data-pipeline
-|\  
-| * af24a70 feat(data_pipeline): complete notebook, SQLite database artifact, and module README
-| * 436b8ac feat(data_pipeline): add catalog scraper, normalized SQLite schema loader, and query suite
-|/  
-* eb5881d chore: initial repository skeleton with gitignore and requirements
-```
-
-You can verify this locally at any time by running:
+You can view the full branch and merge history on GitHub or by running:
 ```bash
 git log --graph --all
 ```
-*(or `git log --graph --all --oneline` for a compact view)*
