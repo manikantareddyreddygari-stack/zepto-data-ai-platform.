@@ -174,5 +174,6 @@ To satisfy the grading criterion for repository history, I worked on a feature b
 
 You can verify this locally at any time by running:
 ```bash
-git log --graph --all --oneline
+git log --graph --all
 ```
+*(or `git log --graph --all --oneline` for a compact view)*
