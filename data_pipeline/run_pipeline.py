@@ -23,52 +23,43 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    print("=" * 80)
-    print("ZEPTO DATA & AI PLATFORM: MODULE 1 (DATA PIPELINE)")
-    print("=" * 80)
+    print("\n--- Zepto Catalog Pipeline: Scraping & Loading ---")
 
-    # 1. Currency Conversion Rate Verification
-    print("\n[Step 1] Checking Currency Conversion Rate...")
+    # 1. Currency Conversion Rate Check
+    print("\n[1/5] Verifying currency conversion baseline...")
     rate = fetch_exchange_rate_with_fallback(FIXED_GBP_TO_INR_RATE)
-    print(f"-> Applied Conversion Rate: 1 GBP = {rate} INR (Fixed Baseline)\n")
+    print(f"Using fixed conversion rate: 1 GBP = {rate} INR")
 
     # 2. Scraping Catalog Data
-    print("[Step 2] Scraping Catalog Products from books.toscrape.com...")
+    print("\n[2/5] Scraping catalog categories from books.toscrape.com...")
     raw_books = scrape_all_categories()
-    print(f"-> Total Raw Books Scraped: {len(raw_books)}\n")
+    print(f"Total raw records scraped: {len(raw_books)}")
 
     # 3. Cleaning & Enrichment
-    print("[Step 3] Cleaning and Enriching Catalog Records...")
+    print("\n[3/5] Cleaning records & converting currency to INR...")
     df_cleaned = clean_book_data(raw_books, conversion_rate=rate)
-    print(f"-> Cleaned Dataset Shape: {df_cleaned.shape}")
-    print(f"-> Unique Categories: {df_cleaned['category'].unique().tolist()}")
-    print("\nSample Cleaned Records:")
+    print(f"Cleaned dataset shape: {df_cleaned.shape}")
+    print(f"Categories captured: {df_cleaned['category'].unique().tolist()}")
+    print("\nFirst 5 cleaned rows:")
     print(df_cleaned.head(5).to_string())
-    print()
 
-    # Verify requirements: >= 60 books across >= 3 categories
-    assert len(df_cleaned) >= 60, f"Expected >= 60 books, got {len(df_cleaned)}"
-    assert df_cleaned['category'].nunique() >= 3, f"Expected >= 3 categories, got {df_cleaned['category'].nunique()}"
+    # Check minimum requirements
+    assert len(df_cleaned) >= 60, f"Expected at least 60 books, got {len(df_cleaned)}"
+    assert df_cleaned['category'].nunique() >= 3, f"Expected at least 3 categories, got {df_cleaned['category'].nunique()}"
 
     # 4. Loading to SQLite Normalized Schema
     db_path = os.path.join(os.path.dirname(__file__), "zepto_catalog.db")
-    print(f"[Step 4] Loading to Normalized SQLite Database: {db_path}...")
+    print(f"\n[4/5] Ingesting into SQLite database: {db_path}...")
     load_data_to_db(df_cleaned, db_path=db_path)
-    print("-> Successfully populated categories and books tables.\n")
+    print("Successfully populated categories and books tables.")
 
-    # 5. Executing SQL Queries
-    print("[Step 5] Executing SQL Queries Against Normalized Database...")
+    # 5. Executing SQL Queries & Pandas Comparison
+    print("\n[5/5] Executing SQL queries and verifying pandas merge equivalence...")
     query_results = run_sql_queries(db_path=db_path)
-    print(f"-> Executed {len(query_results)} SQL queries successfully.\n")
-
-    # 6. Verifying SQL JOIN vs. In-Memory Pandas Merge
-    print("[Step 6] Verifying SQL JOIN vs. Pandas Merge Equivalence...")
     df_sql, df_merge, is_equiv = verify_sql_vs_pandas_merge(db_path=db_path)
-    print(f"-> Verification Result: {'PASS' if is_equiv else 'FAIL'}\n")
+    print(f"Pandas merge vs SQL join match: {'PASS' if is_equiv else 'FAIL'}")
 
-    print("=" * 80)
-    print("MODULE 1 DATA PIPELINE EXECUTION COMPLETE: ALL CRITERIA SATISFIED")
-    print("=" * 80)
+    print("\n--- Pipeline run complete: all 5 steps finished successfully ---\n")
 
 
 if __name__ == "__main__":

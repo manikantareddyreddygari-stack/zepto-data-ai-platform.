@@ -34,8 +34,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Zepto AI Support Assistant API",
-    description="Grounded GenAI Policy Assistant powered by LangGraph, ChromaDB, and FastAPI.",
+    title="Zepto Policy Support Assistant",
+    description="Customer policy answering assistant using LangGraph and ChromaDB.",
     version="1.0.0",
     lifespan=lifespan
 )
