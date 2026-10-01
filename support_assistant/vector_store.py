@@ -9,9 +9,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import glob
 import logging
 from typing import List, Dict, Any
+import numpy as np
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
 from config import (
     DOCS_DIR,
     CHROMA_PERSIST_DIR,
@@ -25,12 +25,39 @@ logger = logging.getLogger(__name__)
 _model_instance = None
 
 
-def get_embedding_model() -> SentenceTransformer:
-    """Singleton loader for local sentence-transformers model."""
+class LocalEmbeddingEngine:
+    """
+    Embedding engine with graceful fallback:
+    Uses SentenceTransformer if available, or ChromaDB's ONNX-based
+    all-MiniLM-L6-v2 engine (lightweight, zero-PyTorch dependency).
+    """
+    def __init__(self, model_name: str = EMBEDDING_MODEL_NAME):
+        self.model_name = model_name
+        self._st = None
+        self._chroma_ef = None
+
+        try:
+            from sentence_transformers import SentenceTransformer
+            self._st = SentenceTransformer(model_name)
+            logger.info(f"Loaded embedding model via SentenceTransformer: {model_name}")
+        except Exception:
+            logger.info(f"Using ONNX runtime embedding engine for {model_name}.")
+            from chromadb.utils import embedding_functions
+            self._chroma_ef = embedding_functions.DefaultEmbeddingFunction()
+
+    def encode(self, texts: List[str]):
+        if self._st is not None:
+            return self._st.encode(texts)
+        else:
+            embeddings = self._chroma_ef(texts)
+            return np.array(embeddings)
+
+
+def get_embedding_model() -> LocalEmbeddingEngine:
+    """Singleton loader for local embedding model."""
     global _model_instance
     if _model_instance is None:
-        logger.info(f"Loading local embedding model: {EMBEDDING_MODEL_NAME}...")
-        _model_instance = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        _model_instance = LocalEmbeddingEngine()
     return _model_instance
 
 
